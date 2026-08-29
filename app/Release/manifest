@@ -1,0 +1,65 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: docker-eks-app
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: docker-eks-app
+
+  template:
+    metadata:
+      labels:
+        app: docker-eks-app
+
+    spec:
+      containers:
+        - name: docker-eks-app
+
+          image: 594729247185.dkr.ecr.eu-north-1.amazonaws.com/docker-eks-app:v1
+
+          ports:
+            - containerPort: 5000
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+---
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: docker-eks-app
+
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+
+spec:
+  type: LoadBalancer
+
+  loadBalancerClass: eks.amazonaws.com/nlb
+
+  selector:
+    app: docker-eks-app
+
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5000
+---      
+
+            
